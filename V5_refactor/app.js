@@ -8,6 +8,16 @@ app.set('view engine', 'pug');
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static('public'));
 
+function asyncHandler(cb) {
+  return async (req, res, next) => {
+    try {
+      await cb(req, res, next);
+    } catch (err) {
+      res.render('error', { error: err });
+    }
+  }
+}
+
 //CALL BACKS
 // function getUsers(cb){
 //   fs.readFile('data.json', 'utf8', (err, data) => {
@@ -28,10 +38,10 @@ app.use(express.static('public'));
 // }); 
 
 // PROMISES 
-function getUsers(){
-  return new Promise((resolve, reject)=> {
-    fs.readFile('data.json', 'utf-8', (err, data)=> {
-      if(err){
+function getUsers() {
+  return new Promise((resolve, reject) => {
+    fs.readFile('data.json', 'utf-8', (err, data) => {
+      if (err) {
         reject(err);
       } else {
         const users = JSON.parse(data);
@@ -51,14 +61,16 @@ function getUsers(){
 //     });
 // }); 
 
-app.get('/', async (req,res) => {
-  try {
-    const users = await getUsers();
-    res.render('index', {title: "Users", users: users.users});
-  } catch(err){
-    res.render('error', {error: err});
-  }
-}); 
+
+//Async/await with error handler extracted as middleware
+app.get('/', asyncHandler(async (req, res) => {
+
+  const users = await getUsers();
+  res.render('index', { title: "Users", users: users.users });
+
+}));
+
+
 
 
 
